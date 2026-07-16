@@ -1,0 +1,6 @@
+{
+  "name": "TerraCraft: 3D Procedural Terrain Studio",
+  "description": "An advanced desktop-grade studio for generating, editing, and exporting procedural 3D terrains and high-resolution PBR textures using Three.js, Simplex noise, normal mapping, and OpenRouter LLM AI assistance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

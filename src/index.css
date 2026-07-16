@@ -1,0 +1,124 @@
+@import "tailwindcss";
+@import "golden-layout/dist/css/goldenlayout-base.css";
+@import "golden-layout/dist/css/themes/goldenlayout-dark-theme.css";
+
+@theme {
+  --color-brand-blue: #97C2ED;
+  --color-brand-bg: #000000;
+  --color-brand-sidebar: #050505;
+  --color-brand-header: #0c0c0c;
+  --color-brand-input: #121212;
+  --color-brand-border: #1e1e1e;
+  --color-brand-inner-border: #2c2c2c;
+  --color-brand-text: #EEF5FC;
+  --color-brand-muted: #97C2ED;
+}
+
+/* Custom compact scrollbar matching the theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #1e1e1e;
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2c2c2c;
+}
+
+/* 
+ * Golden Layout Styling Overrides 
+ * Transforms Golden Layout into a gorgeous, unified modern dark CAD theme
+ */
+.lm_container {
+  background-color: #000000 !important;
+}
+
+.lm_header {
+  background: #0c0c0c !important;
+  border-bottom: 1px solid #1e1e1e !important;
+  height: 28px !important;
+  padding: 0 !important;
+}
+
+.lm_header .lm_tabs {
+  height: 28px !important;
+}
+
+.lm_header .lm_tab {
+  background: #0c0c0c !important;
+  color: #a3a3a3 !important;
+  border-right: 1px solid #1e1e1e !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  font-family: ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  padding: 0 16px !important;
+  margin: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.lm_header .lm_tab:hover {
+  background: #121212 !important;
+  color: #ffffff !important;
+}
+
+.lm_header .lm_tab.lm_active {
+  background: #050505 !important;
+  color: #ffffff !important;
+  border-bottom: 2px solid #ffffff !important;
+}
+
+.lm_header .lm_tab .lm_close_tab {
+  background-size: 8px !important;
+  width: 12px !important;
+  height: 12px !important;
+  top: 8px !important;
+  right: 6px !important;
+  opacity: 0.4 !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.lm_header .lm_tab .lm_close_tab:hover {
+  opacity: 1 !important;
+}
+
+.lm_splitter {
+  background: #0c0c0c !important;
+  opacity: 1 !important;
+  z-index: 5 !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.lm_splitter:hover,
+.lm_splitter.lm_dragging {
+  background: #ffffff !important;
+}
+
+.lm_content {
+  background: #050505 !important;
+  border: none !important;
+}
+
+.lm_controls .lm_tab_button {
+  filter: invert(1) brightness(0.8) !important;
+  opacity: 0.5 !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.lm_controls .lm_tab_button:hover {
+  opacity: 1 !important;
+}
+
