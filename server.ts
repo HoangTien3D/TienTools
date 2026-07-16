@@ -10,7 +10,7 @@ async function startServer() {
   app.get("/api/ambientcg/assets", async (req, res) => {
     try {
       const { q = "", sort = "popular", limit = "24" } = req.query;
-      const apiUrl = `https://ambientcg.com/api/v3/assets?type=material&q=${encodeURIComponent(q as string)}&sort=${sort}&include=downloads&limit=${limit}`;
+      const apiUrl = `https://ambientcg.com/api/v3/assets?type=material&q=${encodeURIComponent(q as string)}&sort=${sort}&include=downloads,previews&limit=${limit}`;
       
       console.log(`[Proxy] Fetching assets from ambientCG: ${apiUrl}`);
       const response = await fetch(apiUrl);

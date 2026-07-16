@@ -23,6 +23,7 @@ interface AmbientCGAsset {
   assetId: string;
   displayName: string;
   type: string;
+  previewUrl?: string;
   downloads?: {
     ZIP?: {
       [key: string]: {
@@ -88,11 +89,12 @@ export default function AmbientCGPanel() {
         }
         data = await res.json();
       } catch (proxyErr) {
-        console.warn('Local proxy failed, falling back to direct ambientCG API fetch:', proxyErr);
-        const directUrl = `https://ambientcg.com/api/v3/assets?type=material&q=${encodeURIComponent(finalQ)}&sort=${sort}&include=downloads&limit=24`;
-        const directRes = await fetch(directUrl);
+        console.warn('Local proxy failed, falling back to CORS proxy for ambientCG API fetch:', proxyErr);
+        const directUrl = `https://ambientcg.com/api/v3/assets?type=material&q=${encodeURIComponent(finalQ)}&sort=${sort}&include=downloads,previews&limit=24`;
+        const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+        const directRes = await fetch(proxiedUrl);
         if (!directRes.ok) {
-          throw new Error(`Direct fetch from ambientCG API failed: ${directRes.statusText}`);
+          throw new Error(`CORS proxy fetch from ambientCG API failed: ${directRes.statusText}`);
         }
         data = await directRes.json();
       }
@@ -100,10 +102,36 @@ export default function AmbientCGPanel() {
       if (data.assets) {
         const mapped: AmbientCGAsset[] = data.assets.map((item: any) => {
           const zip1KJPG = item.downloads?.find((dl: any) => dl.attributes === '1K-JPG' && dl.extension === 'zip');
+          
+          let previewUrl = '';
+          try {
+            if (item.previews && Array.isArray(item.previews)) {
+              const mapPreview = item.previews.find((p: any) => p.type === 'pbr-one-material-shading' || p.type === 'pbr-one-material-maps');
+              if (mapPreview && mapPreview.url) {
+                const urlObj = new URL(mapPreview.url);
+                const hash = urlObj.hash;
+                if (hash) {
+                  const params = new URLSearchParams(hash.substring(1));
+                  const colorUrl = params.get('color_url') || params.get('texture_url')?.split(',')[0];
+                  if (colorUrl) {
+                    previewUrl = colorUrl;
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Error parsing previews from API:', e);
+          }
+
+          if (!previewUrl) {
+            previewUrl = `https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/${item.id}/${item.id}_SQ_Color.jpg`;
+          }
+
           return {
             assetId: item.id,
             displayName: item.id.replace(/([A-Z])/g, ' $1').trim(), // e.g. "Ground054" -> "Ground 054"
             type: 'material',
+            previewUrl,
             downloads: {
               ZIP: {
                 '1K-JPG': {
@@ -186,11 +214,12 @@ export default function AmbientCGPanel() {
         }
         arrayBuffer = await response.arrayBuffer();
       } catch (proxyErr) {
-        console.warn('Local proxy download failed, falling back to direct ambientCG download:', proxyErr);
+        console.warn('Local proxy download failed, falling back to CORS proxy download:', proxyErr);
         const targetUrl = downloadUrl || directDownloadUrl;
-        const directResponse = await fetch(targetUrl);
+        const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+        const directResponse = await fetch(proxiedUrl);
         if (!directResponse.ok) {
-          throw new Error(`Direct download from ambientCG failed: ${directResponse.statusText}`);
+          throw new Error(`CORS proxy download from ambientCG failed: ${directResponse.statusText}`);
         }
         arrayBuffer = await directResponse.arrayBuffer();
       }
@@ -437,7 +466,7 @@ export default function AmbientCGPanel() {
                   {/* Thumbnail Wrapper */}
                   <div className="aspect-square w-full bg-[#000000] relative overflow-hidden group/thumb border-b border-[#1e1e1e]">
                     <img
-                      src={`https://ambientcg.com/get?file=${asset.assetId}_PREVIEW.jpg`}
+                      src={asset.previewUrl || `https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/${asset.assetId}/${asset.assetId}_SQ_Color.jpg`}
                       alt={asset.displayName}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105"
