@@ -89,14 +89,34 @@ export default function AmbientCGPanel() {
         }
         data = await res.json();
       } catch (proxyErr) {
-        console.warn('Local proxy failed, falling back to CORS proxy for ambientCG API fetch:', proxyErr);
+        console.warn('Local proxy failed, falling back to sequential CORS proxies for ambientCG API fetch:', proxyErr);
         const directUrl = `https://ambientcg.com/api/v3/assets?type=material&q=${encodeURIComponent(finalQ)}&sort=${sort}&include=downloads,previews&limit=24`;
-        const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
-        const directRes = await fetch(proxiedUrl);
-        if (!directRes.ok) {
-          throw new Error(`CORS proxy fetch from ambientCG API failed: ${directRes.statusText}`);
+        
+        // Define sequence of backup CORS proxies
+        const proxyUrls = [
+          `https://corsproxy.io/?${encodeURIComponent(directUrl)}`,
+          `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(directUrl)}`,
+          `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`
+        ];
+        
+        let success = false;
+        for (const proxiedUrl of proxyUrls) {
+          try {
+            console.log(`Trying CORS proxy fallback: ${proxiedUrl}`);
+            const directRes = await fetch(proxiedUrl);
+            if (directRes.ok) {
+              data = await directRes.json();
+              success = true;
+              break;
+            }
+          } catch (e) {
+            console.warn(`Fallback CORS proxy failed: ${proxiedUrl}`, e);
+          }
         }
-        data = await directRes.json();
+        
+        if (!success) {
+          throw new Error('All local proxies and CORS proxy options failed to fetch ambientCG API.');
+        }
       }
       
       if (data.assets) {
@@ -214,14 +234,33 @@ export default function AmbientCGPanel() {
         }
         arrayBuffer = await response.arrayBuffer();
       } catch (proxyErr) {
-        console.warn('Local proxy download failed, falling back to CORS proxy download:', proxyErr);
+        console.warn('Local proxy download failed, falling back to sequential CORS proxy downloads:', proxyErr);
         const targetUrl = downloadUrl || directDownloadUrl;
-        const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
-        const directResponse = await fetch(proxiedUrl);
-        if (!directResponse.ok) {
-          throw new Error(`CORS proxy download from ambientCG failed: ${directResponse.statusText}`);
+        
+        const proxyUrls = [
+          `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+          `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
+          `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+        ];
+        
+        let success = false;
+        for (const proxiedUrl of proxyUrls) {
+          try {
+            console.log(`Trying CORS proxy ZIP download: ${proxiedUrl}`);
+            const directResponse = await fetch(proxiedUrl);
+            if (directResponse.ok) {
+              arrayBuffer = await directResponse.arrayBuffer();
+              success = true;
+              break;
+            }
+          } catch (e) {
+            console.warn(`Fallback CORS proxy download failed: ${proxiedUrl}`, e);
+          }
         }
-        arrayBuffer = await directResponse.arrayBuffer();
+        
+        if (!success) {
+          throw new Error(`All download proxies and CORS proxies failed to fetch material zip: ${targetUrl}`);
+        }
       }
       
       setImportState({
@@ -471,6 +510,10 @@ export default function AmbientCGPanel() {
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105"
                       loading="lazy"
+                      onError={(e) => {
+                        // Safe fallback to direct Backblaze SQ Color image if primary fails
+                        (e.target as HTMLImageElement).src = `https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/${asset.assetId}/${asset.assetId}_SQ_Color.jpg`;
+                      }}
                     />
                     
                     {/* Active State Check */}
